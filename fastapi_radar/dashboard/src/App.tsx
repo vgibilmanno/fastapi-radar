@@ -23,8 +23,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Base path for the dashboard (must match the Vite config base)
-const BASE_PATH = "/__radar/";
+// Base path is injected at runtime by the server into window.__RADAR_BASE_PATH__.
+// Falls back to the default path for local dev.
+const BASE_PATH: string = (window as { __RADAR_BASE_PATH__?: string }).__RADAR_BASE_PATH__ ?? "/__radar/";
 
 function App() {
   return (

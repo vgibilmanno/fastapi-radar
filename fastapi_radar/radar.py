@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable, List, Optional, Union
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -209,7 +210,11 @@ class Radar:
 
     def _setup_api(self, include_in_schema: bool) -> None:
         """Mount API endpoints."""
-        api_router = create_api_router(self.get_session, self.auth_dependency)
+        api_router = create_api_router(
+            self.get_session,
+            self.auth_dependency,
+            prefix=f"{self.dashboard_path}/api",
+        )
         self.app.include_router(api_router, include_in_schema=include_in_schema)
 
     def _setup_dashboard(self, include_in_schema: bool) -> None:
@@ -262,7 +267,13 @@ class Radar:
 
             index_path = dashboard_dir / "index.html"
             if index_path.exists():
-                return FileResponse(index_path)
+                content = index_path.read_text(encoding="utf-8")
+                base_path = self.dashboard_path.rstrip("/") + "/"
+                injection = (
+                    f'<script>window.__RADAR_BASE_PATH__ = "{base_path}";</script>'
+                )
+                content = content.replace("</head>", f"{injection}\n</head>", 1)
+                return HTMLResponse(content=content)
             else:
                 return {"error": "Dashboard not found. Please build the dashboard."}
 
@@ -357,7 +368,8 @@ class Radar:
     <script>
         async function loadStats() {{
             try {{
-                const response = await fetch('/__radar/api/stats?hours=1');
+                const basePath = window.__RADAR_BASE_PATH__ || '/__radar/';
+                const response = await fetch(basePath + 'api/stats?hours=1');
                 const data = await response.json();
 
                 document.querySelectorAll('.stat-value')[0].textContent =

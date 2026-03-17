@@ -150,7 +150,9 @@ export interface RequestCounts {
 }
 
 class APIClient {
-  private baseUrl = "/__radar/api";
+  private baseUrl = (
+    (window as { __RADAR_BASE_PATH__?: string }).__RADAR_BASE_PATH__ ?? "/__radar/"
+  ).replace(/\/$/, "") + "/api";
 
   async getRequests(params?: {
     limit?: number;
