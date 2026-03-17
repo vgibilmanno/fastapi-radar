@@ -441,6 +441,7 @@ export interface Translations {
 
   layout: {
     connected: string;
+    disconnected: string;
   },
 };
 
@@ -876,6 +877,7 @@ const en: Translations = {
 
   layout: {
     connected: "Connected",
+    disconnected: "Disconnected",
   },
 };
 
@@ -1307,6 +1309,7 @@ const zh: Translations = {
 
   layout: {
     connected: "已连接",
+    disconnected: "未连接",
   },
 };
 

@@ -160,7 +160,7 @@ def create_api_router(
             yield session
 
     @router.get("/requests", response_model=List[RequestSummary])
-    async def get_requests(
+    def get_requests(
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         status_code: Optional[int] = None,
@@ -220,7 +220,7 @@ def create_api_router(
         ]
 
     @router.get("/requests/counts", response_model=RequestCounts)
-    async def get_request_counts(
+    def get_request_counts(
         status_code: Optional[int] = None,
         method: Optional[str] = None,
         search: Optional[str] = None,
@@ -268,7 +268,7 @@ def create_api_router(
         )
 
     @router.get("/requests/{request_id}", response_model=RequestDetail)
-    async def get_request_detail(request_id: str, session: Session = Depends(get_db)):
+    def get_request_detail(request_id: str, session: Session = Depends(get_db)):
         request = (
             session.query(CapturedRequest).filter(CapturedRequest.request_id == request_id).first()
         )
@@ -316,7 +316,7 @@ def create_api_router(
         )
 
     @router.get("/requests/{request_id}/curl")
-    async def get_request_as_curl(request_id: str, session: Session = Depends(get_db)):
+    def get_request_as_curl(request_id: str, session: Session = Depends(get_db)):
         request = (
             session.query(CapturedRequest).filter(CapturedRequest.request_id == request_id).first()
         )
@@ -426,7 +426,7 @@ def create_api_router(
             raise HTTPException(status_code=500, detail=f"Replay failed: {str(e)}")
 
     @router.get("/queries", response_model=List[QueryDetail])
-    async def get_queries(
+    def get_queries(
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         slow_only: bool = Query(False),
@@ -458,7 +458,7 @@ def create_api_router(
         ]
 
     @router.get("/exceptions", response_model=List[ExceptionDetail])
-    async def get_exceptions(
+    def get_exceptions(
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         exception_type: Optional[str] = None,
@@ -486,7 +486,7 @@ def create_api_router(
         ]
 
     @router.get("/stats", response_model=DashboardStats)
-    async def get_stats(
+    def get_stats(
         hours: int = Query(1, ge=1, le=720),  # Allow up to 30 days
         slow_threshold: int = Query(100),
         session: Session = Depends(get_db),
@@ -541,8 +541,12 @@ def create_api_router(
             requests_per_minute=round_float(requests_per_minute),
         )
 
+    @router.get("/health")
+    def health_check():
+        return {"status": "ok"}
+
     @router.delete("/clear")
-    async def clear_data(
+    def clear_data(
         older_than_hours: Optional[int] = None, session: Session = Depends(get_db)
     ):
         if older_than_hours:
@@ -557,7 +561,7 @@ def create_api_router(
     # Tracing-related API endpoints
 
     @router.get("/traces", response_model=List[TraceSummary])
-    async def get_traces(
+    def get_traces(
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         status: Optional[str] = Query(None),
@@ -595,7 +599,7 @@ def create_api_router(
         ]
 
     @router.get("/traces/{trace_id}", response_model=TraceDetail)
-    async def get_trace_detail(
+    def get_trace_detail(
         trace_id: str,
         session: Session = Depends(get_db),
     ):
@@ -623,7 +627,7 @@ def create_api_router(
         )
 
     @router.get("/traces/{trace_id}/waterfall")
-    async def get_trace_waterfall(
+    def get_trace_waterfall(
         trace_id: str,
         session: Session = Depends(get_db),
     ):
@@ -649,7 +653,7 @@ def create_api_router(
         }
 
     @router.get("/spans/{span_id}")
-    async def get_span_detail(
+    def get_span_detail(
         span_id: str,
         session: Session = Depends(get_db),
     ):
@@ -675,7 +679,7 @@ def create_api_router(
         }
 
     @router.get("/background-tasks", response_model=List[BackgroundTaskSummary])
-    async def get_background_tasks(
+    def get_background_tasks(
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         status: Optional[str] = None,

@@ -284,6 +284,15 @@ class APIClient {
     return response.json();
   }
 
+  async checkHealth(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/health`, { signal: AbortSignal.timeout(5000) });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
   async clearData(olderThanHours?: number): Promise<{ message: string }> {
     const queryParams = olderThanHours
       ? `?older_than_hours=${olderThanHours}`
