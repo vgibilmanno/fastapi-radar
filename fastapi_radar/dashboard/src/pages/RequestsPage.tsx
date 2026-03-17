@@ -43,54 +43,6 @@ export function RequestsPage() {
     setPage(1);
   }, [statusFilter, methodFilter, debouncedSearchTerm, timeRange, activeTab]);
 
-  // Get all requests
-  const { data: allRequests, refetch } = useQuery({
-    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange, page, pageSize],
-    queryFn: () => {
-      const params: any = {
-        limit: pageSize,
-        offset: (page - 1) * pageSize,
-        status_code:
-          statusFilter !== "all" ? getStatusCode(statusFilter) : undefined,
-        method: methodFilter !== "all" ? methodFilter : undefined,
-        search: debouncedSearchTerm || undefined,
-      };
-
-      if (timeRange) {
-        params.start_time = new Date(Date.now() - timeRange * 60 * 60 * 1000).toISOString();
-      }
-
-      return apiClient.getRequests(params);
-    },
-    refetchInterval: 5000,
-  });
-
-  // Calculate counts for tabs
-  const successfulCount =
-    allRequests?.filter(
-      (r) => r.status_code && r.status_code >= 200 && r.status_code < 300
-    ).length || 0;
-  const failedCount =
-    allRequests?.filter((r) => r.status_code && r.status_code >= 400).length ||
-    0;
-  const slowCount =
-    allRequests?.filter((r) => r.duration_ms && r.duration_ms > 500).length ||
-    0;
-
-  // Filter requests based on active tab
-  const filteredRequests =
-    activeTab === "all"
-      ? allRequests
-      : activeTab === "successful"
-        ? allRequests?.filter(
-          (r) => r.status_code && r.status_code >= 200 && r.status_code < 300
-        )
-        : activeTab === "failed"
-          ? allRequests?.filter((r) => r.status_code && r.status_code >= 400)
-          : activeTab === "slow"
-            ? allRequests?.filter((r) => r.duration_ms && r.duration_ms > 500)
-            : allRequests;
-
   const getStatusCode = (filter: string) => {
     switch (filter) {
       case "2xx":
@@ -105,6 +57,57 @@ export function RequestsPage() {
         return undefined;
     }
   };
+
+  const getCountsParams = () => {
+    const params: any = {
+      status_code: statusFilter !== "all" ? getStatusCode(statusFilter) : undefined,
+      method: methodFilter !== "all" ? methodFilter : undefined,
+      search: debouncedSearchTerm || undefined,
+    };
+    if (timeRange) {
+      params.start_time = new Date(Date.now() - timeRange * 60 * 60 * 1000).toISOString();
+    }
+    return params;
+  };
+
+  // Get all requests
+  const { data: allRequests, refetch } = useQuery({
+    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange, page, pageSize],
+    queryFn: () => {
+      const params: any = {
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+        ...getCountsParams(),
+      };
+      return apiClient.getRequests(params);
+    },
+    refetchInterval: 5000,
+  });
+
+  // Fetch total counts from the server (unaffected by pagination)
+  const { data: requestCounts } = useQuery({
+    queryKey: ["request-counts", statusFilter, methodFilter, debouncedSearchTerm, timeRange],
+    queryFn: () => apiClient.getRequestCounts(getCountsParams()),
+    refetchInterval: 5000,
+  });
+
+  const successfulCount = requestCounts?.successful ?? 0;
+  const failedCount = requestCounts?.failed ?? 0;
+  const slowCount = requestCounts?.slow ?? 0;
+
+  // Filter requests based on active tab
+  const filteredRequests =
+    activeTab === "all"
+      ? allRequests
+      : activeTab === "successful"
+        ? allRequests?.filter(
+          (r) => r.status_code && r.status_code >= 200 && r.status_code < 300
+        )
+        : activeTab === "failed"
+          ? allRequests?.filter((r) => r.status_code && r.status_code >= 400)
+          : activeTab === "slow"
+            ? allRequests?.filter((r) => r.duration_ms && r.duration_ms > 500)
+            : allRequests;
 
   const applyFilters = () => {
     refetch();
@@ -248,9 +251,9 @@ export function RequestsPage() {
         <TabsList>
           <TabsTrigger value="all">
             {t('requests.tabs.all')}
-            {allRequests && allRequests.length > 0 && (
+            {requestCounts && requestCounts.total > 0 && (
               <Badge variant="outline" className="ml-2">
-                {allRequests.length}
+                {requestCounts.total}
               </Badge>
             )}
           </TabsTrigger>

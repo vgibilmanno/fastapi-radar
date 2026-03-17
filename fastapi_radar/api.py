@@ -10,14 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import case, desc, func
 from sqlalchemy.orm import Session
 
-from .models import (
-    BackgroundTask,
-    CapturedException,
-    CapturedQuery,
-    CapturedRequest,
-    Span,
-    Trace,
-)
+from .models import BackgroundTask, CapturedException, CapturedQuery, CapturedRequest, Span, Trace
 from .tracing import TracingManager
 
 
@@ -77,6 +70,13 @@ class ExceptionDetail(BaseModel):
     exception_value: Optional[str]
     traceback: str
     created_at: datetime
+
+
+class RequestCounts(BaseModel):
+    total: int
+    successful: int
+    failed: int
+    slow: int
 
 
 class DashboardStats(BaseModel):
@@ -207,6 +207,54 @@ def create_api_router(get_session_context, auth_dependency: Optional[Callable] =
             )
             for req in requests
         ]
+
+    @router.get("/requests/counts", response_model=RequestCounts)
+    async def get_request_counts(
+        status_code: Optional[int] = None,
+        method: Optional[str] = None,
+        search: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        slow_threshold: int = Query(500),
+        session: Session = Depends(get_db),
+    ):
+        query = session.query(
+            func.count().label("total"),
+            func.sum(case((CapturedRequest.status_code.between(200, 299), 1), else_=0)).label(
+                "successful"
+            ),
+            func.sum(case((CapturedRequest.status_code >= 400, 1), else_=0)).label("failed"),
+            func.sum(case((CapturedRequest.duration_ms > slow_threshold, 1), else_=0)).label(
+                "slow"
+            ),
+        )
+
+        if start_time:
+            query = query.filter(CapturedRequest.created_at >= start_time)
+        if end_time:
+            query = query.filter(CapturedRequest.created_at <= end_time)
+        if status_code:
+            if status_code in [200, 300, 400, 500]:
+                lower_bound = status_code
+                upper_bound = status_code + 100
+                query = query.filter(
+                    CapturedRequest.status_code >= lower_bound,
+                    CapturedRequest.status_code < upper_bound,
+                )
+            else:
+                query = query.filter(CapturedRequest.status_code == status_code)
+        if method:
+            query = query.filter(CapturedRequest.method == method)
+        if search:
+            query = query.filter(CapturedRequest.path.ilike(f"%{search}%"))
+
+        result = query.one()
+        return RequestCounts(
+            total=result.total or 0,
+            successful=result.successful or 0,
+            failed=result.failed or 0,
+            slow=result.slow or 0,
+        )
 
     @router.get("/requests/{request_id}", response_model=RequestDetail)
     async def get_request_detail(request_id: str, session: Session = Depends(get_db)):

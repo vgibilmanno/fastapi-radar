@@ -142,6 +142,13 @@ export interface BackgroundTaskSummary {
   created_at: string;
 }
 
+export interface RequestCounts {
+  total: number;
+  successful: number;
+  failed: number;
+  slow: number;
+}
+
 class APIClient {
   private baseUrl = "/__radar/api";
 
@@ -165,6 +172,28 @@ class APIClient {
     if (params?.end_time) queryParams.append("end_time", params.end_time);
 
     const response = await fetch(`${this.baseUrl}/requests?${queryParams}`);
+    return response.json();
+  }
+
+  async getRequestCounts(params?: {
+    status_code?: number;
+    method?: string;
+    search?: string;
+    start_time?: string;
+    end_time?: string;
+    slow_threshold?: number;
+  }): Promise<RequestCounts> {
+    const queryParams = new URLSearchParams();
+    if (params?.status_code)
+      queryParams.append("status_code", params.status_code.toString());
+    if (params?.method) queryParams.append("method", params.method);
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.start_time) queryParams.append("start_time", params.start_time);
+    if (params?.end_time) queryParams.append("end_time", params.end_time);
+    if (params?.slow_threshold)
+      queryParams.append("slow_threshold", params.slow_threshold.toString());
+
+    const response = await fetch(`${this.baseUrl}/requests/counts?${queryParams}`);
     return response.json();
   }
 
