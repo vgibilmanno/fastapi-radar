@@ -84,6 +84,7 @@ class Radar:
         self.query_capture = None
 
         if dashboard_path not in self.exclude_paths:
+            self.exclude_paths.append(f"{self.app.root_path}{dashboard_path}")
             self.exclude_paths.append(dashboard_path)
         self.exclude_paths.append("/favicon.ico")
 
