@@ -236,3 +236,15 @@ class TestRadarFullIntegration:
 
         response = client.get("/__radar/api/exceptions")
         assert response.status_code == 200
+
+        response = client.get("/__radar/api/requests/counts")
+        assert response.status_code == 200
+
+        response = client.get("/__radar/api/logs")
+        assert response.status_code == 200
+
+        response = client.get("/__radar/api/logs/counts")
+        assert response.status_code == 200
+
+        response = client.get("/__radar/api/health")
+        assert response.status_code == 200
