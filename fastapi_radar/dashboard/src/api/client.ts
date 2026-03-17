@@ -156,20 +156,28 @@ class APIClient {
     limit?: number;
     offset?: number;
     status_code?: number;
+    min_status_code?: number;
     method?: string;
     search?: string;
     start_time?: string;
     end_time?: string;
+    slow_only?: boolean;
+    slow_threshold?: number;
   }): Promise<RequestSummary[]> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
     if (params?.status_code)
       queryParams.append("status_code", params.status_code.toString());
+    if (params?.min_status_code)
+      queryParams.append("min_status_code", params.min_status_code.toString());
     if (params?.method) queryParams.append("method", params.method);
     if (params?.search) queryParams.append("search", params.search);
     if (params?.start_time) queryParams.append("start_time", params.start_time);
     if (params?.end_time) queryParams.append("end_time", params.end_time);
+    if (params?.slow_only) queryParams.append("slow_only", "true");
+    if (params?.slow_threshold)
+      queryParams.append("slow_threshold", params.slow_threshold.toString());
 
     const response = await fetch(`${this.baseUrl}/requests?${queryParams}`);
     return response.json();

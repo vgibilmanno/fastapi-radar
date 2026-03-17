@@ -70,14 +70,28 @@ export function RequestsPage() {
     return params;
   };
 
+  const getTabParams = (tab: string) => {
+    switch (tab) {
+      case "successful":
+        return { status_code: 200 };
+      case "failed":
+        return { min_status_code: 400 };
+      case "slow":
+        return { slow_only: true, slow_threshold: 500 };
+      default:
+        return {};
+    }
+  };
+
   // Get all requests
   const { data: allRequests, refetch } = useQuery({
-    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange, page, pageSize],
+    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange, page, pageSize, activeTab],
     queryFn: () => {
       const params: any = {
         limit: pageSize,
         offset: (page - 1) * pageSize,
         ...getCountsParams(),
+        ...getTabParams(activeTab),
       };
       return apiClient.getRequests(params);
     },
@@ -95,19 +109,7 @@ export function RequestsPage() {
   const failedCount = requestCounts?.failed ?? 0;
   const slowCount = requestCounts?.slow ?? 0;
 
-  // Filter requests based on active tab
-  const filteredRequests =
-    activeTab === "all"
-      ? allRequests
-      : activeTab === "successful"
-        ? allRequests?.filter(
-          (r) => r.status_code && r.status_code >= 200 && r.status_code < 300
-        )
-        : activeTab === "failed"
-          ? allRequests?.filter((r) => r.status_code && r.status_code >= 400)
-          : activeTab === "slow"
-            ? allRequests?.filter((r) => r.duration_ms && r.duration_ms > 500)
-            : allRequests;
+  const filteredRequests = allRequests;
 
   const applyFilters = () => {
     refetch();

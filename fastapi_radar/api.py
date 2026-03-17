@@ -160,10 +160,13 @@ def create_api_router(get_session_context, auth_dependency: Optional[Callable] =
         limit: int = Query(100, ge=1, le=1000),
         offset: int = Query(0, ge=0),
         status_code: Optional[int] = None,
+        min_status_code: Optional[int] = None,
         method: Optional[str] = None,
         search: Optional[str] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
+        slow_only: bool = Query(False),
+        slow_threshold: int = Query(500),
         session: Session = Depends(get_db),
     ):
         query = session.query(CapturedRequest)
@@ -184,6 +187,10 @@ def create_api_router(get_session_context, auth_dependency: Optional[Callable] =
             else:
                 # Exact status code match
                 query = query.filter(CapturedRequest.status_code == status_code)
+        if min_status_code:
+            query = query.filter(CapturedRequest.status_code >= min_status_code)
+        if slow_only:
+            query = query.filter(CapturedRequest.duration_ms > slow_threshold)
         if method:
             query = query.filter(CapturedRequest.method == method)
         if search:
