@@ -13,6 +13,7 @@ export interface Translations {
     exceptions: string;
     performance: string;
     backgroundTasks: string;
+    logs: string;
     settings: string;
   };
 
@@ -56,6 +57,10 @@ export interface Translations {
       description: string;
     };
     backgroundTasks: {
+      title: string;
+      description: string;
+    };
+    logs: {
       title: string;
       description: string;
     };
@@ -443,6 +448,24 @@ export interface Translations {
     connected: string;
     disconnected: string;
   },
+
+  // Logs page
+  logs: {
+    noLogs: string;
+    records: string;
+    level: string;
+    logger: string;
+    searchPlaceholder: string;
+    levelFilters: {
+      all: string;
+    };
+    pagination: {
+      previous: string;
+      next: string;
+      pageSize: string;
+      page: string;
+    };
+  };
 };
 
 
@@ -456,6 +479,7 @@ const en: Translations = {
     exceptions: "Exceptions",
     performance: "Performance",
     backgroundTasks: "Background Tasks",
+    logs: "Logs",
     settings: "Settings",
   },
 
@@ -501,6 +525,10 @@ const en: Translations = {
     backgroundTasks: {
       title: "Background Tasks",
       description: "Monitor and track background tasks executed in your application",
+    },
+    logs: {
+      title: "Logs",
+      description: "Browse Python log records captured from your application",
     },
     settings: {
       title: "Settings",
@@ -879,6 +907,23 @@ const en: Translations = {
     connected: "Connected",
     disconnected: "Disconnected",
   },
+
+  logs: {
+    noLogs: "No log records captured yet",
+    records: "Log Records",
+    level: "Level",
+    logger: "Logger",
+    searchPlaceholder: "Search log messages...",
+    levelFilters: {
+      all: "All levels",
+    },
+    pagination: {
+      previous: "Previous",
+      next: "Next",
+      pageSize: "Rows per page",
+      page: "Page",
+    },
+  },
 };
 
 // Chinese translations
@@ -891,6 +936,7 @@ const zh: Translations = {
     exceptions: "异常监控",
     performance: "性能分析",
     backgroundTasks: "后台任务",
+    logs: "日志",
     settings: "设置",
   },
 
@@ -934,6 +980,10 @@ const zh: Translations = {
     backgroundTasks: {
       title: "后台任务",
       description: "监控和跟踪应用程序中执行的后台任务",
+    },
+    logs: {
+      title: "日志",
+      description: "浏览应用程序捕获的 Python 日志记录",
     },
     settings: {
       title: "设置",
@@ -1310,6 +1360,23 @@ const zh: Translations = {
   layout: {
     connected: "已连接",
     disconnected: "未连接",
+  },
+
+  logs: {
+    noLogs: "尚未捕获任何日志记录",
+    records: "日志记录",
+    level: "级别",
+    logger: "日志器",
+    searchPlaceholder: "搜索日志消息...",
+    levelFilters: {
+      all: "所有级别",
+    },
+    pagination: {
+      previous: "上一页",
+      next: "下一页",
+      pageSize: "每页行数",
+      page: "页",
+    },
   },
 };
 

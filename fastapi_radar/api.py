@@ -10,7 +10,15 @@ from pydantic import BaseModel
 from sqlalchemy import case, desc, func
 from sqlalchemy.orm import Session
 
-from .models import BackgroundTask, CapturedException, CapturedQuery, CapturedRequest, Span, Trace
+from .models import (
+    BackgroundTask,
+    CapturedException,
+    CapturedLog,
+    CapturedQuery,
+    CapturedRequest,
+    Span,
+    Trace,
+)
 from .tracing import TracingManager
 
 
@@ -111,6 +119,20 @@ class BackgroundTaskSummary(BaseModel):
     end_time: Optional[datetime]
     duration_ms: Optional[float]
     error: Optional[str]
+    created_at: datetime
+
+
+class LogRecord(BaseModel):
+    id: int
+    logger_name: Optional[str]
+    level: str
+    message: str
+    pathname: Optional[str]
+    lineno: Optional[int]
+    func_name: Optional[str]
+    thread_name: Optional[str]
+    exc_info: Optional[str]
+    request_id: Optional[str]
     created_at: datetime
 
 
@@ -710,6 +732,50 @@ def create_api_router(
                 created_at=task.created_at,
             )
             for task in tasks
+        ]
+
+    @router.get("/logs", response_model=List[LogRecord])
+    def get_logs(
+        limit: int = Query(100, ge=1, le=1000),
+        offset: int = Query(0, ge=0),
+        level: Optional[str] = None,
+        logger_name: Optional[str] = None,
+        search: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        session: Session = Depends(get_db),
+    ):
+        """Get captured log records."""
+        query = session.query(CapturedLog)
+
+        if level:
+            query = query.filter(CapturedLog.level == level.upper())
+        if logger_name:
+            query = query.filter(CapturedLog.logger_name == logger_name)
+        if search:
+            query = query.filter(CapturedLog.message.ilike(f"%{search}%"))
+        if start_time:
+            query = query.filter(CapturedLog.created_at >= start_time)
+        if end_time:
+            query = query.filter(CapturedLog.created_at <= end_time)
+
+        logs = query.order_by(desc(CapturedLog.created_at)).offset(offset).limit(limit).all()
+
+        return [
+            LogRecord(
+                id=log.id,
+                logger_name=log.logger_name,
+                level=log.level,
+                message=log.message,
+                pathname=log.pathname,
+                lineno=log.lineno,
+                func_name=log.func_name,
+                thread_name=log.thread_name,
+                exc_info=log.exc_info,
+                request_id=log.request_id,
+                created_at=log.created_at,
+            )
+            for log in logs
         ]
 
     return router

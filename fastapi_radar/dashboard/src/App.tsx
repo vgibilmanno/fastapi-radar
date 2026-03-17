@@ -8,6 +8,7 @@ import { TracingPage } from "@/pages/TracingPage";
 import { PerformancePage } from "@/pages/PerformancePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { BackgroundTasksPage } from "@/pages/BackgroundTasksPage";
+import { LogsPage } from "@/pages/LogsPage";
 
 import { DetailDrawerProvider } from "@/context/DetailDrawerContext";
 import { DetailDrawer } from "@/components/DetailDrawer";
@@ -43,6 +44,7 @@ function App() {
                 <Route path="database" element={<DatabasePageWrapped />} />
                 <Route path="exceptions" element={<ExceptionsPageWrapped />} />
                 <Route path="background-tasks" element={<BackgroundTasksPage />} />
+                <Route path="logs" element={<LogsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 {/* Fallback to dashboard for unmatched routes */}
                 <Route path="*" element={<Navigate to="/" replace />} />

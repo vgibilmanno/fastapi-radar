@@ -142,6 +142,20 @@ export interface BackgroundTaskSummary {
   created_at: string;
 }
 
+export interface LogRecord {
+  id: number;
+  logger_name: string | null;
+  level: string;
+  message: string;
+  pathname: string | null;
+  lineno: number | null;
+  func_name: string | null;
+  thread_name: string | null;
+  exc_info: string | null;
+  request_id: string | null;
+  created_at: string;
+}
+
 export interface RequestCounts {
   total: number;
   successful: number;
@@ -350,6 +364,31 @@ class APIClient {
     const response = await fetch(`${this.baseUrl}/background-tasks?${queryParams}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch background tasks: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async getLogs(params?: {
+    limit?: number;
+    offset?: number;
+    level?: string;
+    logger_name?: string;
+    search?: string;
+    start_time?: string;
+    end_time?: string;
+  }): Promise<LogRecord[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.offset) queryParams.append("offset", params.offset.toString());
+    if (params?.level) queryParams.append("level", params.level);
+    if (params?.logger_name) queryParams.append("logger_name", params.logger_name);
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.start_time) queryParams.append("start_time", params.start_time);
+    if (params?.end_time) queryParams.append("end_time", params.end_time);
+
+    const response = await fetch(`${this.baseUrl}/logs?${queryParams}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch logs: ${response.statusText}`);
     }
     return response.json();
   }

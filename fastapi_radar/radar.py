@@ -1,6 +1,7 @@
 """Main Radar class for FastAPI Radar."""
 
 import asyncio
+import logging
 import multiprocessing
 import os
 import sys
@@ -195,6 +196,22 @@ class Radar:
             session.close()
             if self._session_lock is not None:
                 self._session_lock.release()
+
+    def attach_logger(
+        self,
+        logger: Optional[logging.Logger] = None,
+        level: int = logging.DEBUG,
+    ) -> "logging.Handler":
+        """Attach a handler to capture Python log records into the Radar database."""
+        from .log_handler import RadarLoggingHandler
+
+        handler = RadarLoggingHandler(get_session=self.get_session, level=level)
+        target = logger if logger is not None else logging.getLogger()
+        if target.level == logging.NOTSET or target.level > level:
+            target.setLevel(level)
+
+        target.addHandler(handler)
+        return handler
 
     def _setup_middleware(self) -> None:
         """Add request capture middleware."""
