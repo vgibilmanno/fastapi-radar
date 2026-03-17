@@ -165,6 +165,13 @@ export interface Translations {
       disconnected: string;
       queries: string;
       avgQueryTime: string;
+      loading: string;
+      totalRequests: string;
+      totalQueries: string;
+      totalExceptions: string;
+      slowQueries: string;
+      avgResponseTime: string;
+      requestsPerMinute: string;
     };
     performance: {
       title: string;
@@ -626,6 +633,13 @@ const en: Translations = {
       disconnected: "Disconnected",
       queries: "Queries",
       avgQueryTime: "Avg Query Time",
+      loading: "Loading statistics...",
+      totalRequests: "Total Requests",
+      totalQueries: "Total Queries",
+      totalExceptions: "Total Exceptions",
+      slowQueries: "Slow Queries",
+      avgResponseTime: "Avg Response Time",
+      requestsPerMinute: "Requests/Minute",
     },
     performance: {
       title: "Performance Overview",
@@ -1081,6 +1095,13 @@ const zh: Translations = {
       disconnected: "未连接",
       queries: "查询数",
       avgQueryTime: "平均查询时间",
+      loading: "加载统计数据中...",
+      totalRequests: "总请求数",
+      totalQueries: "总查询数",
+      totalExceptions: "总异常数",
+      slowQueries: "慢查询",
+      avgResponseTime: "平均响应时间",
+      requestsPerMinute: "每分钟请求数",
     },
     performance: {
       title: "性能概览",
