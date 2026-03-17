@@ -298,7 +298,8 @@ class Radar:
             index_path = dashboard_dir / "index.html"
             if index_path.exists():
                 content = index_path.read_text(encoding="utf-8")
-                base_path = self.dashboard_path.rstrip("/") + "/"
+                root_path = request.scope.get("root_path", "").rstrip("/")
+                base_path = root_path + self.dashboard_path.rstrip("/") + "/"
                 injection = (
                     f'<script>window.__RADAR_BASE_PATH__ = "{base_path}";</script>'
                 )
