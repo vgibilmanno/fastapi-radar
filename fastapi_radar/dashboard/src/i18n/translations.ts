@@ -261,6 +261,12 @@ export interface Translations {
       failed: string;
       slow: string;
     };
+    pagination: {
+      previous: string;
+      next: string;
+      pageSize: string;
+      page: string;
+    };
   };
 
   // Exceptions page
@@ -693,6 +699,12 @@ const en: Translations = {
       failed: "No failed requests",
       slow: "No slow requests",
     },
+    pagination: {
+      previous: "Previous",
+      next: "Next",
+      pageSize: "Rows per page",
+      page: "Page",
+    },
   },
 
   exceptions: {
@@ -1117,6 +1129,12 @@ const zh: Translations = {
       successful: "没有成功的请求",
       failed: "没有失败的请求",
       slow: "没有慢请求",
+    },
+    pagination: {
+      previous: "上一页",
+      next: "下一页",
+      pageSize: "每页行数",
+      page: "第",
     },
   },
 

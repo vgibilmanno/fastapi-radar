@@ -25,7 +25,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": {
+      "/__radar/api": {
         target: "http://localhost:8000",
         changeOrigin: true,
       },

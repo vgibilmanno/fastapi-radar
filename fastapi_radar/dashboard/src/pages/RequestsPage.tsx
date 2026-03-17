@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/api/client";
+import { RequestItem } from "@/components/RequestItem";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -17,14 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SearchInput } from "@/components/ui/search-input";
-import { RequestItem } from "@/components/RequestItem";
-import { useDebounce } from "@/hooks/useDebounce";
-import { Filter, Download, RefreshCw } from "lucide-react";
 import { useDetailDrawer } from "@/context/DetailDrawerContext";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useT } from "@/i18n";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Download, Filter, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function RequestsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
@@ -32,17 +32,24 @@ export function RequestsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [timeRange, setTimeRange] = useState<number | null>(null); // hours
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const { openDetail } = useDetailDrawer();
   const t = useT();
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, methodFilter, debouncedSearchTerm, timeRange, activeTab]);
+
   // Get all requests
   const { data: allRequests, refetch } = useQuery({
-    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange],
+    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange, page, pageSize],
     queryFn: () => {
       const params: any = {
-        limit: 200,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         status_code:
           statusFilter !== "all" ? getStatusCode(statusFilter) : undefined,
         method: methodFilter !== "all" ? methodFilter : undefined,
@@ -75,14 +82,14 @@ export function RequestsPage() {
     activeTab === "all"
       ? allRequests
       : activeTab === "successful"
-      ? allRequests?.filter(
+        ? allRequests?.filter(
           (r) => r.status_code && r.status_code >= 200 && r.status_code < 300
         )
-      : activeTab === "failed"
-      ? allRequests?.filter((r) => r.status_code && r.status_code >= 400)
-      : activeTab === "slow"
-      ? allRequests?.filter((r) => r.duration_ms && r.duration_ms > 500)
-      : allRequests;
+        : activeTab === "failed"
+          ? allRequests?.filter((r) => r.status_code && r.status_code >= 400)
+          : activeTab === "slow"
+            ? allRequests?.filter((r) => r.duration_ms && r.duration_ms > 500)
+            : allRequests;
 
   const getStatusCode = (filter: string) => {
     switch (filter) {
@@ -306,6 +313,54 @@ export function RequestsPage() {
                     {activeTab === "slow" && t('requests.empty.slow')}
                   </div>
                 )}
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {t('requests.pagination.pageSize')}
+                  </span>
+                  <Select
+                    value={String(pageSize)}
+                    onValueChange={(v) => {
+                      setPageSize(Number(v));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p - 1)}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    {t('requests.pagination.previous')}
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    {t('requests.pagination.page')} {page}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={(allRequests?.length ?? 0) < pageSize}
+                  >
+                    {t('requests.pagination.next')}
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
