@@ -29,8 +29,6 @@ const LEVEL_COLORS: Record<
 
 function LogRow({ log }: { log: LogRecord }) {
   const [expanded, setExpanded] = useState(false);
-  const hasDetails = !!(log.exc_info || log.pathname);
-
   return (
     <div className="border-b last:border-b-0 py-3 px-4 hover:bg-muted/30">
       <div className="flex items-start gap-3">
