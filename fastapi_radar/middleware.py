@@ -187,7 +187,7 @@ class RadarMiddleware(BaseHTTPMiddleware):
 
                 # Persist trace data
                 if trace_ctx and self.tracing_manager:
-                    self.tracing_manager.save_trace_context(trace_ctx)
+                    self.tracing_manager.save_trace_context(trace_ctx, session=session)
 
                 session.commit()
 

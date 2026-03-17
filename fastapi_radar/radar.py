@@ -4,6 +4,7 @@ import asyncio
 import multiprocessing
 import os
 import sys
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, List, Optional, Union
@@ -14,7 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 from .api import create_api_router
 from .capture import QueryCapture
@@ -148,12 +149,17 @@ class Radar:
                             "read_only": False,
                             "config": {"memory_limit": "500mb"},
                         },
-                        poolclass=StaticPool,
+                        poolclass=NullPool,
                     )
 
         # Check if storage_engine is async or sync
         # If async, we'll use it for DDL operations but keep sessions sync
         # by accessing the sync engine from the async engine
+        self._use_session_lock = isinstance(
+            getattr(self.storage_engine, "pool", None), StaticPool
+        )
+        self._session_lock = threading.Lock() if self._use_session_lock else None
+
         if isinstance(self.storage_engine, AsyncEngine):
             # For async engines, get the underlying sync engine for session operations
             # The middleware and other components use sessions synchronously
@@ -177,11 +183,18 @@ class Radar:
     @contextmanager
     def get_session(self) -> Session:
         """Get a database session for radar storage."""
+        if self._session_lock is not None:
+            self._session_lock.acquire()
         session = self.SessionLocal()
         try:
             yield session
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
+            if self._session_lock is not None:
+                self._session_lock.release()
 
     def _setup_middleware(self) -> None:
         """Add request capture middleware."""

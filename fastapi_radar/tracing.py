@@ -133,22 +133,26 @@ class TracingManager:
     def __init__(self, get_session):
         self.get_session = get_session
 
-    def save_trace_context(self, trace_ctx: TraceContext):
+    def save_trace_context(self, trace_ctx: TraceContext, session: Session = None):
         """Persist the trace context into the database."""
-        with self.get_session() as session:
-            # Save trace
-            trace_summary = trace_ctx.get_trace_summary()
-            trace = Trace(**trace_summary)
-            session.add(trace)
+        if session is not None:
+            self._save_trace_data(session, trace_ctx)
+        else:
+            with self.get_session() as new_session:
+                self._save_trace_data(new_session, trace_ctx)
+                new_session.commit()
 
-            # Save spans
-            for span_data in trace_ctx.spans.values():
-                span = Span(**span_data)
-                session.add(span)
+    def _save_trace_data(self, session: Session, trace_ctx: TraceContext):
+        """Write trace, spans, and relations to the given session."""
+        trace_summary = trace_ctx.get_trace_summary()
+        trace = Trace(**trace_summary)
+        session.add(trace)
 
-            self._save_span_relations(session, trace_ctx)
+        for span_data in trace_ctx.spans.values():
+            span = Span(**span_data)
+            session.add(span)
 
-            session.commit()
+        self._save_span_relations(session, trace_ctx)
 
     def _save_span_relations(self, session: Session, trace_ctx: TraceContext):
         """Store parent-child span relations for optimized querying."""
@@ -201,8 +205,8 @@ class TracingManager:
                         s.status,
                         s.tags,
                         COALESCE(r.depth, 0) as depth,
-                        -- Offset relative to trace start (SQLite compatible)
-                        (julianday(s.start_time) - MIN(julianday(s.start_time))
+                        -- Offset relative to trace start
+                        (julian(s.start_time) - MIN(julian(s.start_time))
                             OVER (PARTITION BY s.trace_id)) * 86400000 as offset_ms
                     FROM radar_spans s
                     LEFT JOIN radar_span_relations r ON s.span_id = r.child_span_id
