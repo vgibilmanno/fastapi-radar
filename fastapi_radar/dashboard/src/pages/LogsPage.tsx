@@ -92,19 +92,35 @@ export function LogsPage() {
   const t = useT();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState<string>("all");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [appliedLevel, setAppliedLevel] = useState<string>("all");
+  const [appliedStartTime, setAppliedStartTime] = useState("");
+  const [appliedEndTime, setAppliedEndTime] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
+  const filterParams = {
+    level: appliedLevel !== "all" ? appliedLevel : undefined,
+    search: appliedSearch || undefined,
+    start_time: appliedStartTime || undefined,
+    end_time: appliedEndTime || undefined,
+  };
+
+  const { data: logsCount } = useQuery({
+    queryKey: ["logs-count", appliedLevel, appliedSearch, appliedStartTime, appliedEndTime],
+    queryFn: () => apiClient.getLogsCount(filterParams),
+    refetchInterval: 5000,
+  });
+
   const { data: logs, isLoading, isError, refetch } = useQuery({
-    queryKey: ["logs", appliedLevel, appliedSearch, page, pageSize],
+    queryKey: ["logs", appliedLevel, appliedSearch, appliedStartTime, appliedEndTime, page, pageSize],
     queryFn: () =>
       apiClient.getLogs({
         limit: pageSize,
         offset: (page - 1) * pageSize,
-        level: appliedLevel !== "all" ? appliedLevel : undefined,
-        search: appliedSearch || undefined,
+        ...filterParams,
       }),
     refetchInterval: 5000,
   });
@@ -112,6 +128,8 @@ export function LogsPage() {
   const applyFilters = () => {
     setAppliedSearch(search);
     setAppliedLevel(level);
+    setAppliedStartTime(startTime ? new Date(startTime).toISOString() : "");
+    setAppliedEndTime(endTime ? new Date(endTime).toISOString() : "");
     setPage(1);
   };
 
@@ -159,6 +177,28 @@ export function LogsPage() {
               </SelectContent>
             </Select>
 
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground shrink-0">{t("logs.startTime")}</span>
+              <Input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-[190px]"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-muted-foreground shrink-0">{t("logs.endTime")}</span>
+              <Input
+                type="datetime-local"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-[190px]"
+              />
+            </div>
+
             <Button onClick={applyFilters}>{t("requests.filters.apply")}</Button>
             <Button variant="outline" size="icon" onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4" />
@@ -172,9 +212,9 @@ export function LogsPage() {
         <CardHeader className="pb-0">
           <CardTitle>
             {t("logs.records")}
-            {logs && (
+            {logsCount !== undefined && (
               <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({logs.length})
+                ({logsCount.count})
               </span>
             )}
           </CardTitle>

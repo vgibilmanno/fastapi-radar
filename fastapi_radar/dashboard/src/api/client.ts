@@ -368,6 +368,27 @@ class APIClient {
     return response.json();
   }
 
+  async getLogsCount(params?: {
+    level?: string;
+    logger_name?: string;
+    search?: string;
+    start_time?: string;
+    end_time?: string;
+  }): Promise<{ count: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.level) queryParams.append("level", params.level);
+    if (params?.logger_name) queryParams.append("logger_name", params.logger_name);
+    if (params?.search) queryParams.append("search", params.search);
+    if (params?.start_time) queryParams.append("start_time", params.start_time);
+    if (params?.end_time) queryParams.append("end_time", params.end_time);
+
+    const response = await fetch(`${this.baseUrl}/logs/count?${queryParams}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch logs count: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
   async getLogs(params?: {
     limit?: number;
     offset?: number;

@@ -463,6 +463,8 @@ export interface Translations {
     level: string;
     logger: string;
     searchPlaceholder: string;
+    startTime: string;
+    endTime: string;
     levelFilters: {
       all: string;
     };
@@ -928,6 +930,8 @@ const en: Translations = {
     level: "Level",
     logger: "Logger",
     searchPlaceholder: "Search log messages...",
+    startTime: "From",
+    endTime: "To",
     levelFilters: {
       all: "All levels",
     },
@@ -1389,6 +1393,8 @@ const zh: Translations = {
     level: "级别",
     logger: "日志器",
     searchPlaceholder: "搜索日志消息...",
+    startTime: "开始时间",
+    endTime: "结束时间",
     levelFilters: {
       all: "所有级别",
     },

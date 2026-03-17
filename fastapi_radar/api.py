@@ -734,6 +734,31 @@ def create_api_router(
             for task in tasks
         ]
 
+    @router.get("/logs/count")
+    def get_logs_count(
+        level: Optional[str] = None,
+        logger_name: Optional[str] = None,
+        search: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        session: Session = Depends(get_db),
+    ):
+        """Get total count of captured log records matching filters."""
+        query = session.query(func.count()).select_from(CapturedLog)
+
+        if level:
+            query = query.filter(CapturedLog.level == level.upper())
+        if logger_name:
+            query = query.filter(CapturedLog.logger_name == logger_name)
+        if search:
+            query = query.filter(CapturedLog.message.ilike(f"%{search}%"))
+        if start_time:
+            query = query.filter(CapturedLog.created_at >= start_time)
+        if end_time:
+            query = query.filter(CapturedLog.created_at <= end_time)
+
+        return {"count": query.scalar()}
+
     @router.get("/logs", response_model=List[LogRecord])
     def get_logs(
         limit: int = Query(100, ge=1, le=1000),
