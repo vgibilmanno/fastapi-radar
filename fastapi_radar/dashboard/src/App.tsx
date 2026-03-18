@@ -72,6 +72,7 @@ function DetailDrawerWrapper() {
 }
 
 // Database Page
+import { useState } from "react";
 import { QueriesList } from "@/components/QueriesList";
 import {
   Card,
@@ -80,19 +81,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { RefreshIntervalSelect } from "@/components/ui/refresh-interval-select";
 
 function DatabasePageWrapped() {
   const t = useT();
+  const [refreshInterval, setRefreshInterval] = useState(5000);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("pages.database.title")}
-        </h1>
-        <p className="text-muted-foreground">
-          {t("pages.database.description")}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("pages.database.title")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("pages.database.description")}
+          </p>
+        </div>
+        <RefreshIntervalSelect value={refreshInterval} onChange={setRefreshInterval} />
       </div>
 
       <Card>
@@ -103,7 +109,7 @@ function DatabasePageWrapped() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <QueriesList />
+          <QueriesList refreshInterval={refreshInterval} />
         </CardContent>
       </Card>
     </div>
@@ -115,16 +121,20 @@ import { ExceptionsList } from "@/components/ExceptionsList";
 
 function ExceptionsPageWrapped() {
   const t = useT();
+  const [refreshInterval, setRefreshInterval] = useState(5000);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("pages.exceptions.title")}
-        </h1>
-        <p className="text-muted-foreground">
-          {t("pages.exceptions.description")}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("pages.exceptions.title")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("pages.exceptions.description")}
+          </p>
+        </div>
+        <RefreshIntervalSelect value={refreshInterval} onChange={setRefreshInterval} />
       </div>
 
       <Card>
@@ -133,7 +143,7 @@ function ExceptionsPageWrapped() {
           <CardDescription>{t("pages.exceptions.description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ExceptionsList />
+          <ExceptionsList refreshInterval={refreshInterval} />
         </CardContent>
       </Card>
     </div>

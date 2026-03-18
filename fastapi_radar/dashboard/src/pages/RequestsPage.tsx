@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RefreshIntervalSelect } from "@/components/ui/refresh-interval-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDetailDrawer } from "@/context/DetailDrawerContext";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -34,6 +35,7 @@ export function RequestsPage() {
   const [timeRange, setTimeRange] = useState<number | null>(null); // hours
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [refreshInterval, setRefreshInterval] = useState(5000);
   const { openDetail } = useDetailDrawer();
   const t = useT();
 
@@ -95,14 +97,14 @@ export function RequestsPage() {
       };
       return apiClient.getRequests(params);
     },
-    refetchInterval: 5000,
+    refetchInterval: refreshInterval || false,
   });
 
   // Fetch total counts from the server (unaffected by pagination)
   const { data: requestCounts } = useQuery({
     queryKey: ["request-counts", statusFilter, methodFilter, debouncedSearchTerm, timeRange],
     queryFn: () => apiClient.getRequestCounts(getCountsParams()),
-    refetchInterval: 5000,
+    refetchInterval: refreshInterval || false,
   });
 
   const successfulCount = requestCounts?.successful ?? 0;
@@ -129,11 +131,14 @@ export function RequestsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('pages.requests.title')}</h1>
-        <p className="text-muted-foreground">
-          {t('pages.requests.description')}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{t('pages.requests.title')}</h1>
+          <p className="text-muted-foreground">
+            {t('pages.requests.description')}
+          </p>
+        </div>
+        <RefreshIntervalSelect value={refreshInterval} onChange={setRefreshInterval} />
       </div>
 
       {/* Filters and Actions */}

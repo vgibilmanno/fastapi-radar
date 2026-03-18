@@ -1,12 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
 import { apiClient, ExceptionDetail } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Clock, ChevronRight } from "lucide-react";
-import { format } from "@/lib/date";
 import { useDetailDrawer } from "@/context/DetailDrawerContext";
 import { useT } from "@/i18n";
+import { format } from "@/lib/date";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ChevronRight, Clock } from "lucide-react";
 
-export function ExceptionsList() {
+interface ExceptionsListProps {
+  refreshInterval?: number;
+}
+
+export function ExceptionsList({ refreshInterval }: ExceptionsListProps) {
   const { openDetail } = useDetailDrawer();
   const t = useT();
 
@@ -16,7 +20,7 @@ export function ExceptionsList() {
       apiClient.getExceptions({
         limit: 100,
       }),
-    refetchInterval: 5000,
+    refetchInterval: refreshInterval !== undefined ? (refreshInterval || false) : 5000,
   });
 
   if (isLoading) {

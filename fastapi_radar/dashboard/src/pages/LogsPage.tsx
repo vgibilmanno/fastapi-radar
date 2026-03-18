@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { RefreshIntervalSelect } from "@/components/ui/refresh-interval-select";
 import {
   Select,
   SelectContent,
@@ -98,6 +99,7 @@ export function LogsPage() {
   const [appliedEndTime, setAppliedEndTime] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [refreshInterval, setRefreshInterval] = useState(5000);
 
   const filterParams = {
     level: appliedLevel !== "all" ? appliedLevel : undefined,
@@ -109,7 +111,7 @@ export function LogsPage() {
   const { data: logsCount } = useQuery({
     queryKey: ["logs-count", appliedLevel, appliedSearch, appliedStartTime, appliedEndTime],
     queryFn: () => apiClient.getLogsCount(filterParams),
-    refetchInterval: 5000,
+    refetchInterval: refreshInterval || false,
   });
 
   const { data: logs, isLoading, isError, refetch } = useQuery({
@@ -120,7 +122,7 @@ export function LogsPage() {
         offset: (page - 1) * pageSize,
         ...filterParams,
       }),
-    refetchInterval: 5000,
+    refetchInterval: refreshInterval || false,
   });
 
   const applyFilters = () => {
@@ -137,11 +139,14 @@ export function LogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t("pages.logs.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("pages.logs.description")}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("pages.logs.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("pages.logs.description")}</p>
+        </div>
+        <RefreshIntervalSelect value={refreshInterval} onChange={setRefreshInterval} />
       </div>
 
       {/* Filters */}
