@@ -574,8 +574,10 @@ def create_api_router(
         if older_than_hours:
             cutoff = datetime.now(timezone.utc) - timedelta(hours=older_than_hours)
             session.query(CapturedRequest).filter(CapturedRequest.created_at < cutoff).delete()
+            session.query(CapturedLog).filter(CapturedLog.created_at < cutoff).delete()
         else:
             session.query(CapturedRequest).delete()
+            session.query(CapturedLog).delete()
 
         session.commit()
         return {"message": "Data cleared successfully"}
