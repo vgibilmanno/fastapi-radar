@@ -496,6 +496,17 @@ def create_api_router(
             for q in queries
         ]
 
+    @router.get("/exceptions/count")
+    def get_exceptions_count(
+        exception_type: Optional[str] = None,
+        session: Session = Depends(get_db),
+    ):
+        query = session.query(func.count()).select_from(CapturedException)
+        if exception_type:
+            query = query.filter(CapturedException.exception_type == exception_type)
+
+        return {"count": query.scalar()}
+
     @router.get("/exceptions", response_model=List[ExceptionDetail])
     def get_exceptions(
         limit: int = Query(100, ge=1, le=1000),
@@ -591,10 +602,16 @@ def create_api_router(
         if older_than_hours:
             cutoff = datetime.now(timezone.utc) - timedelta(hours=older_than_hours)
             session.query(CapturedRequest).filter(CapturedRequest.created_at < cutoff).delete()
+            session.query(CapturedException).filter(CapturedException.created_at < cutoff).delete()
+            session.query(CapturedQuery).filter(CapturedQuery.created_at < cutoff).delete()
             session.query(CapturedLog).filter(CapturedLog.created_at < cutoff).delete()
+            session.query(Trace).filter(Trace.created_at < cutoff).delete()
         else:
             session.query(CapturedRequest).delete()
+            session.query(CapturedException).delete()
+            session.query(CapturedQuery).delete()
             session.query(CapturedLog).delete()
+            session.query(Trace).delete()
 
         session.commit()
         return {"message": "Data cleared successfully"}

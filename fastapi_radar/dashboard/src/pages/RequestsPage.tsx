@@ -21,12 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDetailDrawer } from "@/context/DetailDrawerContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useT } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Download, Filter, RefreshCw } from "lucide-react";
+import { Download, Filter, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function RequestsPage() {
@@ -102,8 +103,13 @@ export function RequestsPage() {
     }
     return timeRange ?? 24;
   })();
-  
+
   const chartTimeLabel = (() => {
+    switch (timeRange) {
+      case 1: return t('requests.timeRangeFilters.lastHour');
+      case 24: return t('requests.timeRangeFilters.last24Hours');
+      case 168: return t('requests.timeRangeFilters.last7Days');
+    }
     if (appliedStartTime || appliedEndTime) {
       const parts: string[] = [];
       if (appliedStartTime) parts.push(new Date(appliedStartTime).toLocaleString());
@@ -112,11 +118,7 @@ export function RequestsPage() {
         ? `${t('requests.timeRangeFilters.customRange')}: ${parts[0]} – ${parts[1]}`
         : `${t('requests.timeRangeFilters.customRange')}: ${parts[0]}`;
     }
-    switch (timeRange) {
-      case 1: return t('requests.timeRangeFilters.lastHour');
-      case 168: return t('requests.timeRangeFilters.last7Days');
-      default: return t('requests.timeRangeFilters.last24Hours');
-    }
+    return t('requests.timeRangeFilters.last24Hours');
   })();
 
   const { data: timeseriesData } = useQuery({
@@ -129,12 +131,19 @@ export function RequestsPage() {
     refetchInterval: refreshInterval || false,
   });
 
-  const chartData = timeseriesData?.map((point) => ({
-    time: point.time,
-    isoTime: point.iso_time,
-    successful: Math.max(0, point.requests - point.errors),
-    errors: point.errors,
-  }));
+  const chartData = timeseriesData?.map((point) => {
+    const d = new Date(point.iso_time);
+    const localTime =
+      chartHours > 48
+        ? d.toLocaleDateString([], { weekday: "short", month: "numeric", day: "numeric" })
+        : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+    return {
+      time: localTime,
+      isoTime: point.iso_time,
+      successful: Math.max(0, point.requests - point.errors),
+      errors: point.errors,
+    };
+  });
 
   const getBucketDurationMs = () => {
     if (chartHours === 1) return 60 * 1000;
@@ -187,6 +196,7 @@ export function RequestsPage() {
   const filteredRequests = allRequests;
 
   const applyFilters = () => {
+    setTimeRange(null);
     setAppliedStartTime(startTime ? new Date(startTime).toISOString() : "");
     setAppliedEndTime(endTime ? new Date(endTime).toISOString() : "");
     setPage(1);
@@ -478,52 +488,13 @@ export function RequestsPage() {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {t('requests.pagination.pageSize')}
-                  </span>
-                  <Select
-                    value={String(pageSize)}
-                    onValueChange={(v) => {
-                      setPageSize(Number(v));
-                      setPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p - 1)}
-                    disabled={page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    {t('requests.pagination.previous')}
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    {t('requests.pagination.page')} {page}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={(allRequests?.length ?? 0) < pageSize}
-                  >
-                    {t('requests.pagination.next')}
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <TablePagination
+                page={page}
+                pageSize={pageSize}
+                itemCount={allRequests?.length ?? 0}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
+              />
             </CardContent>
           </Card>
         </TabsContent>

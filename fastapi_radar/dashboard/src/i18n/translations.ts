@@ -115,6 +115,12 @@ export interface Translations {
     viewAll: string;
     copy: string;
     copied: string;
+    pagination: {
+      previous: string;
+      next: string;
+      pageSize: string;
+      page: string;
+    };
   };
 
   // Time ranges
@@ -276,12 +282,6 @@ export interface Translations {
       successful: string;
       failed: string;
       slow: string;
-    };
-    pagination: {
-      previous: string;
-      next: string;
-      pageSize: string;
-      page: string;
     };
     chart: {
       title: string;
@@ -478,12 +478,6 @@ export interface Translations {
     levelFilters: {
       all: string;
     };
-    pagination: {
-      previous: string;
-      next: string;
-      pageSize: string;
-      page: string;
-    };
   };
 };
 
@@ -598,6 +592,12 @@ const en: Translations = {
     viewAll: "View all",
     copy: "Copy",
     copied: "Copied!",
+    pagination: {
+      previous: "Previous",
+      next: "Next",
+      pageSize: "Rows per page",
+      page: "Page",
+    },
   },
 
   timeRange: {
@@ -757,12 +757,6 @@ const en: Translations = {
       successful: "No successful requests",
       failed: "No failed requests",
       slow: "No slow requests",
-    },
-    pagination: {
-      previous: "Previous",
-      next: "Next",
-      pageSize: "Rows per page",
-      page: "Page",
     },
     chart: {
       title: "Number of Requests",
@@ -955,12 +949,6 @@ const en: Translations = {
     levelFilters: {
       all: "All levels",
     },
-    pagination: {
-      previous: "Previous",
-      next: "Next",
-      pageSize: "Rows per page",
-      page: "Page",
-    },
   },
 };
 
@@ -1072,6 +1060,12 @@ const zh: Translations = {
     viewAll: "查看全部",
     copy: "复制",
     copied: "已复制!",
+    pagination: {
+      previous: "上一页",
+      next: "下一页",
+      pageSize: "每页行数",
+      page: "页",
+    },
   },
 
   timeRange: {
@@ -1230,12 +1224,6 @@ const zh: Translations = {
       successful: "没有成功的请求",
       failed: "没有失败的请求",
       slow: "没有慢请求",
-    },
-    pagination: {
-      previous: "上一页",
-      next: "下一页",
-      pageSize: "每页行数",
-      page: "第",
     },
     chart: {
       title: "请求数量",
@@ -1427,12 +1415,6 @@ const zh: Translations = {
     endTime: "结束时间",
     levelFilters: {
       all: "所有级别",
-    },
-    pagination: {
-      previous: "上一页",
-      next: "下一页",
-      pageSize: "每页行数",
-      page: "页",
     },
   },
 };

@@ -65,6 +65,7 @@ export function BarChart({
   const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
   const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   const getIndex = (label: string) =>
     data.findIndex((d) => String(d[xDataKey]) === label);
@@ -84,9 +85,10 @@ export function BarChart({
   const handleMouseUp = () => {
     if (!isDragging) return;
     setIsDragging(false);
-    if (refAreaLeft !== null && refAreaRight !== null && onRangeSelect) {
+    const effectiveRight = refAreaRight ?? refAreaLeft;
+    if (refAreaLeft !== null && effectiveRight !== null && onRangeSelect) {
       let startIdx = getIndex(refAreaLeft);
-      let endIdx = getIndex(refAreaRight);
+      let endIdx = getIndex(effectiveRight);
       if (startIdx > endIdx) [startIdx, endIdx] = [endIdx, startIdx];
       if (startIdx !== -1 && endIdx !== -1) {
         onRangeSelect(startIdx, endIdx);
@@ -94,6 +96,11 @@ export function BarChart({
     }
     setRefAreaLeft(null);
     setRefAreaRight(null);
+  };
+
+  const handleMouseLeave = () => {
+    handleMouseUp();
+    setIsHovering(false);
   };
 
   const content = (
@@ -105,7 +112,8 @@ export function BarChart({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={handleMouseLeave}
         style={{
           cursor: onRangeSelect ? (isDragging ? "col-resize" : "crosshair") : undefined,
           userSelect: "none",
@@ -158,7 +166,7 @@ export function BarChart({
             />
           </>
         )}
-        <Tooltip content={<CustomTooltip />} active={!isDragging} />
+        {isHovering && !isDragging && <Tooltip content={<CustomTooltip />} />}
         {showLegend && (
           <Legend iconType="rect" wrapperStyle={{ fontSize: 11 }} />
         )}

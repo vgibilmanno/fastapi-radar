@@ -293,6 +293,16 @@ class APIClient {
     return response.json();
   }
 
+  async getExceptionsCount(params?: {
+    exception_type?: string;
+  }): Promise<{ count: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.exception_type)
+      queryParams.append("exception_type", params.exception_type);
+    const response = await fetch(`${this.baseUrl}/exceptions/count?${queryParams}`);
+    return response.json();
+  }
+
   async getExceptions(params?: {
     limit?: number;
     offset?: number;

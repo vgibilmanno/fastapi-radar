@@ -11,10 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useT } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, RefreshCw, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, RefreshCw, Search } from "lucide-react";
 import { useState } from "react";
 
 const LEVEL_COLORS: Record<
@@ -247,52 +248,14 @@ export function LogsPage() {
           )}
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-4 px-4 pb-4 border-t">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {t("logs.pagination.pageSize")}
-              </span>
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => {
-                  setPageSize(Number(v));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p - 1)}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                {t("logs.pagination.previous")}
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {t("logs.pagination.page")} {page}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={(logs?.length ?? 0) < pageSize}
-              >
-                {t("logs.pagination.next")}
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            itemCount={logs?.length ?? 0}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            className="px-4 pb-4"
+          />
         </CardContent>
       </Card>
     </div>
