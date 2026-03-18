@@ -230,6 +230,9 @@ export interface Translations {
       description: string;
       timeRange: string;
       apply: string;
+      startTime: string;
+      endTime: string;
+      clearRange: string;
     };
     tabs: {
       all: string;
@@ -260,6 +263,7 @@ export interface Translations {
       lastHour: string;
       last24Hours: string;
       last7Days: string;
+      customRange: string;
     };
     descriptions: {
       all: string;
@@ -278,6 +282,12 @@ export interface Translations {
       next: string;
       pageSize: string;
       page: string;
+    };
+    chart: {
+      title: string;
+      description: string;
+      successful: string;
+      errors: string;
     };
   };
 
@@ -701,6 +711,9 @@ const en: Translations = {
       description: "Filter and search through request logs",
       timeRange: "Time Range",
       apply: "Apply Filters",
+      startTime: "Start",
+      endTime: "End",
+      clearRange: "Clear Range",
     },
     tabs: {
       all: "All Requests",
@@ -731,6 +744,7 @@ const en: Translations = {
       lastHour: "Last Hour",
       last24Hours: "Last 24 Hours",
       last7Days: "Last 7 Days",
+      customRange: "Custom Range",
     },
     descriptions: {
       all: "Complete list of all HTTP requests",
@@ -749,6 +763,12 @@ const en: Translations = {
       next: "Next",
       pageSize: "Rows per page",
       page: "Page",
+    },
+    chart: {
+      title: "Number of Requests",
+      description: "Requests and errors",
+      successful: "Successful",
+      errors: "Errors",
     },
   },
 
@@ -1164,6 +1184,9 @@ const zh: Translations = {
       description: "筛选和搜索请求日志",
       timeRange: "时间范围",
       apply: "应用筛选器",
+      startTime: "开始",
+      endTime: "结束",
+      clearRange: "清除范围",
     },
     tabs: {
       all: "所有请求",
@@ -1194,6 +1217,7 @@ const zh: Translations = {
       lastHour: "最近1小时",
       last24Hours: "最近24小时",
       last7Days: "最近7天",
+      customRange: "自定义范围",
     },
     descriptions: {
       all: "所有 HTTP 请求的完整列表",
@@ -1212,6 +1236,12 @@ const zh: Translations = {
       next: "下一页",
       pageSize: "每页行数",
       page: "第",
+    },
+    chart: {
+      title: "请求数量",
+      description: "请求与错误",
+      successful: "成功",
+      errors: "错误",
     },
   },
 

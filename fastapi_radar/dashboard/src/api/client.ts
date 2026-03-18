@@ -163,6 +163,13 @@ export interface RequestCounts {
   slow: number;
 }
 
+export interface RequestTimeseriesPoint {
+  time: string;
+  iso_time: string;
+  requests: number;
+  errors: number;
+}
+
 class APIClient {
   private baseUrl = (
     (window as { __RADAR_BASE_PATH__?: string }).__RADAR_BASE_PATH__ ?? "/__radar/"
@@ -218,6 +225,14 @@ class APIClient {
       queryParams.append("slow_threshold", params.slow_threshold.toString());
 
     const response = await fetch(`${this.baseUrl}/requests/counts?${queryParams}`);
+    return response.json();
+  }
+
+  async getRequestTimeseries(hours: number = 24, startTime?: string, endTime?: string): Promise<RequestTimeseriesPoint[]> {
+    const params = new URLSearchParams({ hours: String(startTime ? 24 : hours) });
+    if (startTime) params.set("start_time", startTime);
+    if (endTime) params.set("end_time", endTime);
+    const response = await fetch(`${this.baseUrl}/requests/timeseries?${params}`);
     return response.json();
   }
 

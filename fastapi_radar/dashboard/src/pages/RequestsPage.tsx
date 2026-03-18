@@ -1,5 +1,6 @@
 import { apiClient } from "@/api/client";
 import { RequestItem } from "@/components/RequestItem";
+import { BarChart } from "@/components/charts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RefreshIntervalSelect } from "@/components/ui/refresh-interval-select";
 import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
@@ -18,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RefreshIntervalSelect } from "@/components/ui/refresh-interval-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDetailDrawer } from "@/context/DetailDrawerContext";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -36,14 +38,23 @@ export function RequestsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [refreshInterval, setRefreshInterval] = useState(5000);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [appliedStartTime, setAppliedStartTime] = useState("");
+  const [appliedEndTime, setAppliedEndTime] = useState("");
   const { openDetail } = useDetailDrawer();
   const t = useT();
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  function toDatetimeLocal(date: Date): string {
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16);
+  }
+
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, methodFilter, debouncedSearchTerm, timeRange, activeTab]);
+  }, [statusFilter, methodFilter, debouncedSearchTerm, appliedStartTime, appliedEndTime, activeTab]);
 
   const getStatusCode = (filter: string) => {
     switch (filter) {
@@ -66,9 +77,8 @@ export function RequestsPage() {
       method: methodFilter !== "all" ? methodFilter : undefined,
       search: debouncedSearchTerm || undefined,
     };
-    if (timeRange) {
-      params.start_time = new Date(Date.now() - timeRange * 60 * 60 * 1000).toISOString();
-    }
+    if (appliedStartTime) params.start_time = appliedStartTime;
+    if (appliedEndTime) params.end_time = appliedEndTime;
     return params;
   };
 
@@ -85,9 +95,72 @@ export function RequestsPage() {
     }
   };
 
+  const chartHours = (() => {
+    if (appliedStartTime && appliedEndTime) {
+      const diffMs = new Date(appliedEndTime).getTime() - new Date(appliedStartTime).getTime();
+      return Math.max(1, Math.ceil(diffMs / (1000 * 3600)));
+    }
+    return timeRange ?? 24;
+  })();
+  
+  const chartTimeLabel = (() => {
+    if (appliedStartTime || appliedEndTime) {
+      const parts: string[] = [];
+      if (appliedStartTime) parts.push(new Date(appliedStartTime).toLocaleString());
+      if (appliedEndTime) parts.push(new Date(appliedEndTime).toLocaleString());
+      return parts.length === 2
+        ? `${t('requests.timeRangeFilters.customRange')}: ${parts[0]} – ${parts[1]}`
+        : `${t('requests.timeRangeFilters.customRange')}: ${parts[0]}`;
+    }
+    switch (timeRange) {
+      case 1: return t('requests.timeRangeFilters.lastHour');
+      case 168: return t('requests.timeRangeFilters.last7Days');
+      default: return t('requests.timeRangeFilters.last24Hours');
+    }
+  })();
+
+  const { data: timeseriesData } = useQuery({
+    queryKey: ["requests-timeseries", chartHours, appliedStartTime, appliedEndTime],
+    queryFn: () => apiClient.getRequestTimeseries(
+      chartHours,
+      appliedStartTime || undefined,
+      appliedEndTime || undefined,
+    ),
+    refetchInterval: refreshInterval || false,
+  });
+
+  const chartData = timeseriesData?.map((point) => ({
+    time: point.time,
+    isoTime: point.iso_time,
+    successful: Math.max(0, point.requests - point.errors),
+    errors: point.errors,
+  }));
+
+  const getBucketDurationMs = () => {
+    if (chartHours === 1) return 60 * 1000;
+    if (chartHours > 24) return 24 * 60 * 60 * 1000;
+    return 60 * 60 * 1000;
+  };
+
+  const handleChartBrush = (startIdx: number, endIdx: number) => {
+    if (!chartData?.length) return;
+    const startIso = chartData[startIdx]?.isoTime;
+    const endIso = chartData[endIdx]?.isoTime;
+    if (!startIso || !endIso) return;
+    const endDate = new Date(new Date(endIso).getTime() + getBucketDurationMs());
+    const newStart = new Date(startIso).toISOString();
+    const newEnd = endDate.toISOString();
+    setStartTime(toDatetimeLocal(new Date(newStart)));
+    setEndTime(toDatetimeLocal(new Date(newEnd)));
+    setAppliedStartTime(newStart);
+    setAppliedEndTime(newEnd);
+    setTimeRange(null);
+    setPage(1);
+  };
+
   // Get all requests
   const { data: allRequests, refetch } = useQuery({
-    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, timeRange, page, pageSize, activeTab],
+    queryKey: ["all-requests", statusFilter, methodFilter, debouncedSearchTerm, appliedStartTime, appliedEndTime, page, pageSize, activeTab],
     queryFn: () => {
       const params: any = {
         limit: pageSize,
@@ -102,7 +175,7 @@ export function RequestsPage() {
 
   // Fetch total counts from the server (unaffected by pagination)
   const { data: requestCounts } = useQuery({
-    queryKey: ["request-counts", statusFilter, methodFilter, debouncedSearchTerm, timeRange],
+    queryKey: ["request-counts", statusFilter, methodFilter, debouncedSearchTerm, appliedStartTime, appliedEndTime],
     queryFn: () => apiClient.getRequestCounts(getCountsParams()),
     refetchInterval: refreshInterval || false,
   });
@@ -114,7 +187,9 @@ export function RequestsPage() {
   const filteredRequests = allRequests;
 
   const applyFilters = () => {
-    refetch();
+    setAppliedStartTime(startTime ? new Date(startTime).toISOString() : "");
+    setAppliedEndTime(endTime ? new Date(endTime).toISOString() : "");
+    setPage(1);
   };
 
   const exportData = () => {
@@ -140,6 +215,21 @@ export function RequestsPage() {
         </div>
         <RefreshIntervalSelect value={refreshInterval} onChange={setRefreshInterval} />
       </div>
+
+      {/* Requests Bar Chart */}
+      <BarChart
+        title={t("requests.chart.title")}
+        description={`${t("requests.chart.description")} — ${chartTimeLabel}`}
+        data={chartData ?? []}
+        bars={[
+          { dataKey: "successful", name: t("requests.chart.successful"), color: "#0d9488" },
+          { dataKey: "errors", name: t("requests.chart.errors"), color: "#ef4444" },
+        ]}
+        xDataKey="time"
+        height={260}
+        stacked
+        onRangeSelect={handleChartBrush}
+      />
 
       {/* Filters and Actions */}
       <Card>
@@ -214,35 +304,97 @@ export function RequestsPage() {
 
             <div className="space-y-2">
               <Label>{t('requests.filters.timeRange')}</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
-                  variant={timeRange === null ? "default" : "outline"}
+                  variant={timeRange === null && !appliedStartTime ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTimeRange(null)}
+                  onClick={() => {
+                    setTimeRange(null);
+                    setStartTime("");
+                    setEndTime("");
+                    setAppliedStartTime("");
+                    setAppliedEndTime("");
+                  }}
                 >
                   {t('requests.timeRangeFilters.all')}
                 </Button>
                 <Button
                   variant={timeRange === 1 ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTimeRange(1)}
+                  onClick={() => {
+                    const ago = new Date(Date.now() - 1 * 3600000);
+                    setTimeRange(1);
+                    setStartTime(toDatetimeLocal(ago));
+                    setEndTime("");
+                    setAppliedStartTime(ago.toISOString());
+                    setAppliedEndTime("");
+                  }}
                 >
                   {t('requests.timeRangeFilters.lastHour')}
                 </Button>
                 <Button
                   variant={timeRange === 24 ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTimeRange(24)}
+                  onClick={() => {
+                    const ago = new Date(Date.now() - 24 * 3600000);
+                    setTimeRange(24);
+                    setStartTime(toDatetimeLocal(ago));
+                    setEndTime("");
+                    setAppliedStartTime(ago.toISOString());
+                    setAppliedEndTime("");
+                  }}
                 >
                   {t('requests.timeRangeFilters.last24Hours')}
                 </Button>
                 <Button
                   variant={timeRange === 168 ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTimeRange(168)}
+                  onClick={() => {
+                    const ago = new Date(Date.now() - 168 * 3600000);
+                    setTimeRange(168);
+                    setStartTime(toDatetimeLocal(ago));
+                    setEndTime("");
+                    setAppliedStartTime(ago.toISOString());
+                    setAppliedEndTime("");
+                  }}
                 >
                   {t('requests.timeRangeFilters.last7Days')}
                 </Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground shrink-0">{t('requests.filters.startTime')}</span>
+                  <Input
+                    type="datetime-local"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-[190px]"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-muted-foreground shrink-0">{t('requests.filters.endTime')}</span>
+                  <Input
+                    type="datetime-local"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-[190px]"
+                  />
+                </div>
+                {(startTime || endTime) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setTimeRange(null);
+                      setStartTime("");
+                      setEndTime("");
+                      setAppliedStartTime("");
+                      setAppliedEndTime("");
+                    }}
+                  >
+                    {t('requests.filters.clearRange')}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

@@ -19,6 +19,7 @@ from .models import (
     Span,
     Trace,
 )
+from .timeseries import build_timeseries
 from .tracing import TracingManager
 
 
@@ -85,6 +86,13 @@ class RequestCounts(BaseModel):
     successful: int
     failed: int
     slow: int
+
+
+class RequestTimeseriesPoint(BaseModel):
+    time: str
+    iso_time: str
+    requests: int
+    errors: int
 
 
 class DashboardStats(BaseModel):
@@ -288,6 +296,15 @@ def create_api_router(
             failed=result.failed or 0,
             slow=result.slow or 0,
         )
+
+    @router.get("/requests/timeseries", response_model=List[RequestTimeseriesPoint])
+    def get_requests_timeseries(
+        hours: int = Query(24, ge=1, le=87600),
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        session: Session = Depends(get_db),
+    ):
+        return build_timeseries(session, hours=hours, start_time=start_time, end_time=end_time)
 
     @router.get("/requests/{request_id}", response_model=RequestDetail)
     def get_request_detail(request_id: str, session: Session = Depends(get_db)):
