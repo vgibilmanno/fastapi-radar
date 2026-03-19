@@ -26,7 +26,7 @@ export function TablePagination({
     itemCount,
     onPageChange,
     onPageSizeChange,
-    pageSizeOptions = [25, 50, 100],
+    pageSizeOptions = [10, 25, 50, 100],
     className,
 }: TablePaginationProps) {
     const t = useT();

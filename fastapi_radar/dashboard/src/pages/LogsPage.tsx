@@ -2,6 +2,7 @@ import { apiClient, LogRecord } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Input } from "@/components/ui/input";
 import { RefreshIntervalSelect } from "@/components/ui/refresh-interval-select";
 import {
@@ -99,7 +100,7 @@ export function LogsPage() {
   const [appliedStartTime, setAppliedStartTime] = useState("");
   const [appliedEndTime, setAppliedEndTime] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [refreshInterval, setRefreshInterval] = useState(5000);
 
   const filterParams = {
@@ -183,22 +184,20 @@ export function LogsPage() {
 
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-muted-foreground shrink-0">{t("logs.startTime")}</span>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={setStartTime}
+                placeholder={t("logs.startTime")}
                 className="w-[190px]"
               />
             </div>
 
             <div className="flex items-center gap-1.5">
               <span className="text-sm text-muted-foreground shrink-0">{t("logs.endTime")}</span>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={setEndTime}
+                placeholder={t("logs.endTime")}
                 className="w-[190px]"
               />
             </div>
