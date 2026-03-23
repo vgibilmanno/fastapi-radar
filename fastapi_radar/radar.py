@@ -247,6 +247,13 @@ class Radar:
             prefix=f"{self.dashboard_path}/api",
         )
         self.app.include_router(api_router, include_in_schema=include_in_schema)
+        self._start_host_sync()
+
+    def _start_host_sync(self) -> None:
+        """Start the background thread that syncs host state (threads + in-flight) to the DB."""
+        from .host_sync import get_host_id, start_host_sync
+
+        self._host_sync_thread = start_host_sync(self.get_session, get_host_id())
 
     def _setup_dashboard(self, include_in_schema: bool) -> None:
         """Mount dashboard static files."""

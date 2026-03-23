@@ -14,6 +14,8 @@ export interface Translations {
     performance: string;
     backgroundTasks: string;
     logs: string;
+    threads: string;
+    inflight: string;
     settings: string;
   };
 
@@ -61,6 +63,14 @@ export interface Translations {
       description: string;
     };
     logs: {
+      title: string;
+      description: string;
+    };
+    threads: {
+      title: string;
+      description: string;
+    };
+    inflight: {
       title: string;
       description: string;
     };
@@ -479,6 +489,30 @@ export interface Translations {
       all: string;
     };
   };
+
+  // Threads page
+  threads: {
+    totalThreads: string;
+    daemonThreads: string;
+    nonDaemonThreads: string;
+    threadList: string;
+    threadListDescription: string;
+    failedToLoad: string;
+  };
+
+  // In-flight requests page
+  inflight: {
+    activeRequests: string;
+    liveUpdate: string;
+    requestTable: string;
+    requestTableDescription: string;
+    noRequests: string;
+    failedToLoad: string;
+    clientIp: string;
+    startedAt: string;
+    elapsed: string;
+    requestId: string;
+  };
 };
 
 
@@ -493,6 +527,8 @@ const en: Translations = {
     performance: "Performance",
     backgroundTasks: "Background Tasks",
     logs: "Logs",
+    threads: "Threads",
+    inflight: "In-Flight",
     settings: "Settings",
   },
 
@@ -542,6 +578,14 @@ const en: Translations = {
     logs: {
       title: "Logs",
       description: "Browse Python log records captured from your application",
+    },
+    threads: {
+      title: "Threads",
+      description: "View all running Python threads and their status",
+    },
+    inflight: {
+      title: "In-Flight Requests",
+      description: "HTTP requests currently being processed by the server",
     },
     settings: {
       title: "Settings",
@@ -950,6 +994,28 @@ const en: Translations = {
       all: "All levels",
     },
   },
+
+  threads: {
+    totalThreads: "Total Threads",
+    daemonThreads: "Daemon Threads",
+    nonDaemonThreads: "Non-Daemon Threads",
+    threadList: "Thread List",
+    threadListDescription: "All currently running Python threads with stack traces",
+    failedToLoad: "Failed to load threads",
+  },
+
+  inflight: {
+    activeRequests: "Active Requests",
+    liveUpdate: "Live (updates every 500ms)",
+    requestTable: "In-Flight Requests",
+    requestTableDescription: "Requests actively being processed right now",
+    noRequests: "No requests in flight",
+    failedToLoad: "Failed to load in-flight requests",
+    clientIp: "Client IP",
+    startedAt: "Started At",
+    elapsed: "Elapsed",
+    requestId: "Request ID",
+  },
 };
 
 // Chinese translations
@@ -963,6 +1029,8 @@ const zh: Translations = {
     performance: "性能分析",
     backgroundTasks: "后台任务",
     logs: "日志",
+    threads: "线程",
+    inflight: "进行中",
     settings: "设置",
   },
 
@@ -1010,6 +1078,14 @@ const zh: Translations = {
     logs: {
       title: "日志",
       description: "浏览应用程序捕获的 Python 日志记录",
+    },
+    threads: {
+      title: "线程",
+      description: "查看所有正在运行的 Python 线程及其状态",
+    },
+    inflight: {
+      title: "进行中的请求",
+      description: "服务器当前正在处理的 HTTP 请求",
     },
     settings: {
       title: "设置",
@@ -1416,6 +1492,28 @@ const zh: Translations = {
     levelFilters: {
       all: "所有级别",
     },
+  },
+
+  threads: {
+    totalThreads: "总线程数",
+    daemonThreads: "守护线程",
+    nonDaemonThreads: "非守护线程",
+    threadList: "线程列表",
+    threadListDescription: "所有当前运行的 Python 线程及其堆栈跟踪",
+    failedToLoad: "加载线程失败",
+  },
+
+  inflight: {
+    activeRequests: "活跃请求",
+    liveUpdate: "实时（每 500ms 更新）",
+    requestTable: "进行中的请求",
+    requestTableDescription: "当前正在处理的请求",
+    noRequests: "暂无进行中的请求",
+    failedToLoad: "加载请求失败",
+    clientIp: "客户端 IP",
+    startedAt: "开始时间",
+    elapsed: "已用时",
+    requestId: "请求 ID",
   },
 };
 

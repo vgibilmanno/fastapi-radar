@@ -5,7 +5,7 @@ import time
 import traceback
 import uuid
 from contextvars import ContextVar
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -13,20 +13,21 @@ from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 
 from .models import CapturedException, CapturedRequest
-from .tracing import (
-    TraceContext,
-    TracingManager,
-    create_trace_context,
-    set_trace_context,
-)
-from .utils import (
-    get_client_ip,
-    redact_sensitive_data,
-    serialize_headers,
-    truncate_body,
-)
+from .tracing import TraceContext, TracingManager, create_trace_context, set_trace_context
+from .utils import get_client_ip, redact_sensitive_data, serialize_headers, truncate_body
 
 request_context: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
+
+_inflight_requests: Dict[str, dict] = {}
+
+
+def get_inflight_requests() -> Dict[str, dict]:
+    """Return a snapshot of all currently in-flight requests with live elapsed_ms."""
+    now = time.time()
+    return {
+        rid: {**info, "elapsed_ms": round((now - info["_start"]) * 1000, 2)}
+        for rid, info in list(_inflight_requests.items())
+    }
 
 
 class RadarMiddleware(BaseHTTPMiddleware):
@@ -56,6 +57,17 @@ class RadarMiddleware(BaseHTTPMiddleware):
         request_id = str(uuid.uuid4())
         request_context.set(request_id)
         start_time = time.time()
+
+        # Register as in-flight immediately
+        _inflight_requests[request_id] = {
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path,
+            "url": str(request.url),
+            "client_ip": get_client_ip(request),
+            "started_at": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+            "_start": start_time,
+        }
 
         # Create tracing context for this request
         trace_ctx = None
@@ -190,6 +202,9 @@ class RadarMiddleware(BaseHTTPMiddleware):
                     self.tracing_manager.save_trace_context(trace_ctx, session=session)
 
                 session.commit()
+
+            # Deregister from in-flight registry
+            _inflight_requests.pop(request_id, None)
 
             request_context.set(None)
 

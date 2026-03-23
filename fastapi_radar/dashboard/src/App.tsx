@@ -9,6 +9,8 @@ import { PerformancePage } from "@/pages/PerformancePage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { BackgroundTasksPage } from "@/pages/BackgroundTasksPage";
 import { LogsPage } from "@/pages/LogsPage";
+import { ThreadsPage } from "@/pages/ThreadsPage";
+import { InflightPage } from "@/pages/InflightPage";
 
 import { DetailDrawerProvider } from "@/context/DetailDrawerContext";
 import { DetailDrawer } from "@/components/DetailDrawer";
@@ -39,11 +41,13 @@ function App() {
                 <Route index element={<DashboardPage />} />
                 <Route path="requests" element={<RequestsPage />} />
                 <Route path="requests/:requestId" element={<RequestDetailPage />} />
+                <Route path="inflight" element={<InflightPage />} />
                 <Route path="tracing" element={<TracingPage />} />
                 <Route path="performance" element={<PerformancePage />} />
                 <Route path="database" element={<DatabasePageWrapped />} />
                 <Route path="exceptions" element={<ExceptionsPageWrapped />} />
                 <Route path="background-tasks" element={<BackgroundTasksPage />} />
+                <Route path="threads" element={<ThreadsPage />} />
                 <Route path="logs" element={<LogsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 {/* Fallback to dashboard for unmatched routes */}

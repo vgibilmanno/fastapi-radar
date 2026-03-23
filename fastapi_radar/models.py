@@ -186,3 +186,20 @@ class CapturedLog(Base):
     created_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
     )
+
+
+class HostStatus(Base):
+    __tablename__ = "radar_host_status"
+
+    id = Column(Integer, Sequence("radar_host_status_id_seq"), primary_key=True, index=True)
+    host_id = Column(String(255), index=True)
+    inflight_requests = Column(JSON, default=list)
+    threads = Column(JSON, default=list)
+    inflight_total = Column(Integer, default=0)
+    thread_total = Column(Integer, default=0)
+    daemon_count = Column(Integer, default=0)
+    non_daemon_count = Column(Integer, default=0)
+    last_seen = Column(DateTime(timezone=True), index=True)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )

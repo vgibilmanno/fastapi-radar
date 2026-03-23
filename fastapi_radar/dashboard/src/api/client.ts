@@ -163,6 +163,40 @@ export interface RequestCounts {
   slow: number;
 }
 
+export interface ThreadInfo {
+  id: number | null;
+  name: string;
+  daemon: boolean;
+  alive: boolean;
+  stack_trace: string[];
+  host?: string;
+}
+
+export interface ThreadsData {
+  total: number;
+  daemon_count: number;
+  non_daemon_count: number;
+  hosts?: number;
+  threads: ThreadInfo[];
+}
+
+export interface InflightRequest {
+  request_id: string;
+  method: string;
+  path: string;
+  url: string;
+  client_ip: string | null;
+  started_at: string;
+  elapsed_ms: number;
+  host?: string;
+}
+
+export interface InflightData {
+  total: number;
+  hosts?: number;
+  requests: InflightRequest[];
+}
+
 export interface RequestTimeseriesPoint {
   time: string;
   iso_time: string;
@@ -435,6 +469,22 @@ class APIClient {
     const response = await fetch(`${this.baseUrl}/logs?${queryParams}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch logs: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async getThreads(): Promise<ThreadsData> {
+    const response = await fetch(`${this.baseUrl}/threads`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch threads: ${response.statusText}`);
+    }
+    return response.json();
+  }
+
+  async getInflightRequests(): Promise<InflightData> {
+    const response = await fetch(`${this.baseUrl}/inflight`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch in-flight requests: ${response.statusText}`);
     }
     return response.json();
   }

@@ -16,6 +16,7 @@ from .models import (
     CapturedLog,
     CapturedQuery,
     CapturedRequest,
+    HostStatus,
     Span,
     Trace,
 )
@@ -590,6 +591,63 @@ def create_api_router(
             slow_queries=slow_queries,
             requests_per_minute=round_float(requests_per_minute),
         )
+
+    @router.get("/inflight")
+    def get_inflight(
+        ttl_seconds: int = Query(10, ge=1, le=300),
+        session: Session = Depends(get_db),
+    ):
+        """Return in-flight requests aggregated from all active hosts."""
+        cutoff = datetime.now(timezone.utc) - timedelta(seconds=ttl_seconds)
+        active_hosts = (
+            session.query(HostStatus).filter(HostStatus.last_seen >= cutoff).all()
+        )
+
+        now = datetime.now(timezone.utc)
+        all_requests: List[Dict] = []
+        for host in active_hosts:
+            for req in host.inflight_requests or []:
+                try:
+                    started = datetime.fromisoformat(
+                        req["started_at"].replace("Z", "+00:00")
+                    )
+                    elapsed_ms = round((now - started).total_seconds() * 1000, 2)
+                except Exception:
+                    elapsed_ms = 0
+                all_requests.append(
+                    {**req, "elapsed_ms": elapsed_ms, "host": host.host_id}
+                )
+
+        all_requests.sort(key=lambda r: r.get("started_at", ""))
+        return {
+            "total": len(all_requests),
+            "hosts": len(active_hosts),
+            "requests": all_requests,
+        }
+
+    @router.get("/threads")
+    def get_threads(
+        ttl_seconds: int = Query(10, ge=1, le=300),
+        session: Session = Depends(get_db),
+    ):
+        """Return all running threads aggregated from all active hosts."""
+        cutoff = datetime.now(timezone.utc) - timedelta(seconds=ttl_seconds)
+        active_hosts = (
+            session.query(HostStatus).filter(HostStatus.last_seen >= cutoff).all()
+        )
+
+        all_threads: List[Dict] = []
+        for host in active_hosts:
+            for t in host.threads or []:
+                all_threads.append({**t, "host": host.host_id})
+
+        return {
+            "total": len(all_threads),
+            "daemon_count": sum(1 for t in all_threads if t.get("daemon")),
+            "non_daemon_count": sum(1 for t in all_threads if not t.get("daemon")),
+            "hosts": len(active_hosts),
+            "threads": all_threads,
+        }
 
     @router.get("/health")
     def health_check():

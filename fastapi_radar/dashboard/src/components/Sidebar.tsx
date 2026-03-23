@@ -1,21 +1,23 @@
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { apiClient } from "@/api/client";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n";
+import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
-  Database,
   AlertTriangle,
-  TrendingUp,
-  Settings,
-  Home,
+  Cpu,
+  Database,
   GitBranch,
-  Zap,
+  Home,
   ScrollText,
+  Settings,
+  TrendingUp,
+  Zap,
+  Radio
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/api/client";
-import { useT } from "@/i18n";
 
 interface SidebarProps {
   className?: string;
@@ -34,6 +36,12 @@ const mainNavItemsConfig = [
     titleKey: "nav.requests",
     icon: Activity,
     href: "/requests",
+    badge: null,
+  },
+  {
+    titleKey: "nav.inflight",
+    icon: Radio,
+    href: "/inflight",
     badge: null,
   },
   {
@@ -68,11 +76,17 @@ const mainNavItemsConfig = [
     badge: null,
   },
   {
+    titleKey: "nav.threads",
+    icon: Cpu,
+    href: "/threads",
+    badge: null,
+  },
+  {
     titleKey: "nav.logs",
     icon: ScrollText,
     href: "/logs",
     badge: null,
-  },
+  }
 ];
 
 const systemNavItemsConfig = [
