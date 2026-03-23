@@ -30,7 +30,7 @@ export function RequestsPage() {
   const [timeRange, setTimeRange] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [refreshInterval, setRefreshInterval] = useState(5000);
+  const [refreshInterval, setRefreshInterval] = useState(30000);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [appliedStartTime, setAppliedStartTime] = useState("");
@@ -255,7 +255,8 @@ export function RequestsPage() {
           ].map(({ label, value }) => (
             <Button
               key={label}
-              variant={timeRange === value && !appliedStartTime ? "default" : "outline"}
+              variant={value === null && !timeRange && !appliedStartTime
+                || value && timeRange === value ? "default" : "outline"}
               size="sm"
               className="h-8 px-2 text-xs"
               onClick={() => {
