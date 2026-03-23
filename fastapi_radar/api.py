@@ -437,8 +437,8 @@ def create_api_router(
                 replayed_request = CapturedRequest(
                     request_id=str(uuid.uuid4()),
                     method=request.method,
-                    url=request.url,
-                    path=request.path,
+                    url=request.url[:500],
+                    path=request.path[:500],
                     query_params=request.query_params,
                     headers=dict(response.request.headers),
                     body=request_body if isinstance(request_body, str) else None,
